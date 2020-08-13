@@ -25,8 +25,7 @@
 
 #### 编译ipam, 并移动到/opt/cni/bin下
 ```bash
-[root@jinlong cni]# cd plugins/macvlan/
-[root@jinlong plugins]# cd ipam/
+[root@jinlong cni]# cd plugins/ipam/
 [root@jinlong ipam]# go build main.go dns.go
 [root@jinlong ipam]# mv main /opt/cni/bin/my-ipam
 ```

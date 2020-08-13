@@ -23,7 +23,7 @@
 * 根据CNI_ARGS获取发布阶段.
 * 判断获取的ip是否符合当前的发布阶段, 如果是则直接返回创建的ip.
 
-#### 编译macvlan, 并移动到/opt/cni/bin下
+#### 编译ipam, 并移动到/opt/cni/bin下
 ```bash
 [root@jinlong cni]# cd plugins/macvlan/
 [root@jinlong plugins]# cd ipam/

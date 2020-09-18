@@ -31,6 +31,8 @@ This example configuration returns 2 IP addresses.
 					"rangeStart": "10.10.1.20",
 					"rangeEnd": "10.10.1.40",
 					"gateway": "10.10.1.1",
+					"sandbox": ["10.10.1.20"],
+					"smallflow": ["10.10.1.21"]
 				},
 				{
 					"subnet": "172.16.5.0/24"

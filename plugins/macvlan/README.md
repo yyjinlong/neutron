@@ -10,9 +10,10 @@ Since each macvlan interface has its own MAC address, it makes it easy to use wi
 
 ```
 {
-	"name": "my-macvlan",
-	"type": "macvlan",
-	"master": "bond0",
+	"cniVersion": "0.3.1",
+	"name": "macvlannet",
+	"type": "my-macvlan",
+	"master": "bond0.444",
 	"ipam": {
 		"type": "my-ipam"
 	}

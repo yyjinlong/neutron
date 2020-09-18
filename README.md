@@ -52,11 +52,12 @@
 ### etcd 存储服务配置举例
 ```json
 {
-  "master": "bond0.444",
   "cniVersion": "0.3.1",
-  "type": "my-macvlan",
   "name": "macvlannet",
+  "type": "my-macvlan",
+  "master": "bond0.444",
   "ipam": {
+    "type": "my-ipam",
     "ranges": [
       [
         {
@@ -73,8 +74,7 @@
           ]
         }
       ]
-    ],
-    "type": "my-ipam"
+    ]
   }
 }
 ```

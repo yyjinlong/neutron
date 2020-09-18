@@ -151,7 +151,7 @@ func createVlanInterface(conf *NetConf) (netlink.Link, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Cmd add can't found parent device: %s", err)
 	}
-    if pLink.Attrs().OperState != netlink.OperUp {
+	if pLink.Attrs().OperState != netlink.OperUp {
 		return nil, fmt.Errorf("Cmd add vlan parentt device: %s not up.", pName)
 	}
 

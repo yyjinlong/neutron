@@ -21,7 +21,7 @@ const (
 
 func ConnectEtcd(ec *EtcdConf) (*clientv3.Client, error) {
 	/*
-	 *	连接etcd, 采用tls认证
+	 * 连接etcd, 采用tls认证
 	 */
 	tlsInfo := transport.TLSInfo{
 		CertFile:      ec.CertFile,
@@ -60,7 +60,7 @@ func GetEtcdServiceKey(service string) string {
 
 func GetConfigFromEtcd(etcdClient *clientv3.Client, service string) ([]byte, error) {
 	/*
-	 *	从etcd中获取macvlan配置+ipam配置(真正的配置)
+	 * 从etcd中获取macvlan配置+ipam配置(真正的配置)
 	 */
 	key := GetEtcdServiceKey(service)
 	kv := clientv3.NewKV(etcdClient)

@@ -53,7 +53,7 @@ func ParseLocalConf(bytes []byte) (*LocalConf, error) {
 
 func GetCurrentServiceAndPod(envArgs string) (string, string) {
 	/*
-	 *	根据CNI_ARGS获取服务名
+	 * 根据CNI_ARGS获取服务名
 	 */
 	log.Infof("Get current service args from CNI_ARGS: %s", envArgs)
 	pairs := strings.Split(envArgs, ";")
@@ -74,7 +74,7 @@ func GetCurrentServiceAndPod(envArgs string) (string, string) {
 
 func LoadEtcdConfig(envArgs string, etcd *EtcdConf) ([]byte, error) {
 	/*
-	 *	根据服务从etcd加载配置
+	 * 根据服务从etcd加载配置
 	 */
 	etcdClient, err := ConnectEtcd(etcd)
 	if err != nil {

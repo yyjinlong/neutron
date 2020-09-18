@@ -63,8 +63,7 @@ func GetConfigFromEtcd(etcdClient *clientv3.Client, service string) ([]byte, err
 	 * 从etcd中获取macvlan配置+ipam配置(真正的配置)
 	 */
 	key := GetEtcdServiceKey(service)
-	kv := clientv3.NewKV(etcdClient)
-	resp, err := kv.Get(context.TODO(), key)
+	resp, err := etcdClient.Get(context.TODO(), key)
 	if err != nil {
 		return nil, err
 	}

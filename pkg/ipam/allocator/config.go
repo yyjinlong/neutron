@@ -32,17 +32,6 @@ type IPAMArgs struct {
 	IPs []net.IP `json:"ips"`
 }
 
-type RangeSet []Range
-
-type Range struct {
-	RangeStart net.IP      `json:"rangeStart,omitempty"` // The first ip, inclusive
-	RangeEnd   net.IP      `json:"rangeEnd,omitempty"`   // The last ip, inclusive
-	Subnet     types.IPNet `json:"subnet"`
-	Gateway    net.IP      `json:"gateway,omitempty"`
-	Sandbox    []net.IP    `json:"sandbox,omitempty"`
-	Smallflow  []net.IP    `json:"smallflow,omitempty"`
-}
-
 // NewIPAMConfig creates a NetworkConfig from the given network name.
 func LoadIPAMConfig(bytes []byte, envArgs string) (*IPAMConfig, string, error) {
 	n := Net{}

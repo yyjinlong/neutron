@@ -1,4 +1,4 @@
-module cni
+module neutron
 
 go 1.14
 

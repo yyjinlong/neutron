@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package allocator
+package config
 
 import (
 	"fmt"
@@ -25,7 +25,7 @@ import (
 // Canonicalize takes a given range and ensures that all information is consistent,
 // filling out Start, End, and Gateway with sane values if missing
 func (r *Range) Canonicalize() error {
-	if err := canonicalizeIP(&r.Subnet.IP); err != nil {
+	if err := CanonicalizeIP(&r.Subnet.IP); err != nil {
 		return err
 	}
 
@@ -50,7 +50,7 @@ func (r *Range) Canonicalize() error {
 	if r.Gateway == nil {
 		r.Gateway = ip.NextIP(r.Subnet.IP)
 	} else {
-		if err := canonicalizeIP(&r.Gateway); err != nil {
+		if err := CanonicalizeIP(&r.Gateway); err != nil {
 			return err
 		}
 	}
@@ -59,7 +59,7 @@ func (r *Range) Canonicalize() error {
 	// otherwise use the first free IP (i.e. .1) - this will conflict with the
 	// gateway but we skip it in the iterator
 	if r.RangeStart != nil {
-		if err := canonicalizeIP(&r.RangeStart); err != nil {
+		if err := CanonicalizeIP(&r.RangeStart); err != nil {
 			return err
 		}
 
@@ -73,7 +73,7 @@ func (r *Range) Canonicalize() error {
 	// RangeEnd: If specified, verify sanity. Otherwise, add a sensible default
 	// (e.g. for a /24: .254 if IPv4, ::255 if IPv6)
 	if r.RangeEnd != nil {
-		if err := canonicalizeIP(&r.RangeEnd); err != nil {
+		if err := CanonicalizeIP(&r.RangeEnd); err != nil {
 			return err
 		}
 
@@ -89,7 +89,7 @@ func (r *Range) Canonicalize() error {
 
 // IsValidIP checks if a given ip is a valid, allocatable address in a given Range
 func (r *Range) Contains(addr net.IP) bool {
-	if err := canonicalizeIP(&addr); err != nil {
+	if err := CanonicalizeIP(&addr); err != nil {
 		return false
 	}
 
@@ -140,8 +140,8 @@ func (r *Range) String() string {
 	return fmt.Sprintf("%s-%s", r.RangeStart.String(), r.RangeEnd.String())
 }
 
-// canonicalizeIP makes sure a provided ip is in standard form
-func canonicalizeIP(ip *net.IP) error {
+// CanonicalizeIP makes sure a provided ip is in standard form
+func CanonicalizeIP(ip *net.IP) error {
 	if ip.To4() != nil {
 		*ip = ip.To4()
 		return nil

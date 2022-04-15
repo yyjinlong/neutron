@@ -15,27 +15,28 @@
 package allocator
 
 import (
-	"os"
 	"fmt"
 	"net"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/containernetworking/cni/pkg/types/current"
+	"github.com/containernetworking/plugins/pkg/ip"
 
-	"cni/plugins/pkg/ip"
-	"cni/plugins/ipam/backend"
+	"neutron/pkg/config"
+	"neutron/pkg/etcd"
+	"neutron/pkg/log"
 )
 
 type IPAllocator struct {
-	rangeset *RangeSet
-	store    backend.Store
+	rangeset *config.RangeSet
+	store    etcd.Storager
 	rangeID  string // Used for tracking last reserved ip
 }
 
-func NewIPAllocator(s *RangeSet, store backend.Store, id int) *IPAllocator {
+func NewIPAllocator(s *config.RangeSet, store etcd.Storager, id int) *IPAllocator {
 	return &IPAllocator{
 		rangeset: s,
 		store:    store,
@@ -43,10 +44,8 @@ func NewIPAllocator(s *RangeSet, store backend.Store, id int) *IPAllocator {
 	}
 }
 
+// 获取当前发布阶段: 沙盒、小流量、全流量
 func (a *IPAllocator) getDeployStage(envArgs string) string {
-	/*
-	 *  获取当前发布阶段: 沙盒、小流量、全流量
-	 */
 	pairs := strings.Split(envArgs, ";")
 	for _, pair := range pairs {
 		kv := strings.Split(pair, "=")
@@ -82,7 +81,7 @@ func (a *IPAllocator) Get(id string, ifname string, envArgs string, requestedIP 
 	var gw net.IP
 
 	if requestedIP != nil {
-		if err := canonicalizeIP(&requestedIP); err != nil {
+		if err := config.CanonicalizeIP(&requestedIP); err != nil {
 			return nil, err
 		}
 
@@ -166,9 +165,8 @@ func (a *IPAllocator) Release(id string, ifname string) error {
 	return a.store.ReleaseByID(id, ifname)
 }
 
-
 type RangeIter struct {
-	rangeset *RangeSet
+	rangeset *config.RangeSet
 
 	// The current range id
 	rangeIdx int
@@ -266,25 +264,18 @@ func (i *RangeIter) Next() (*net.IPNet, net.IP) {
 	return &net.IPNet{IP: i.cur, Mask: r.Subnet.Mask}, r.Gateway
 }
 
+// 判断当前发布阶段, 获取的ip是否是在对应的列表里
 func (i *RangeIter) matchDeployStageIP(stage string, ip net.IP) bool {
-	/*
-	 *  判断当前发布阶段, 获取的ip是否是在对应的列表里
-	 */
 	r := (*i.rangeset)[i.rangeIdx]
-	sandbox_list := r.Sandbox
-	smallflow_list := r.Smallflow
+	sandboxList := r.Sandbox
 	log.Infof("Current deploy stage: %s fetch ip: %s will to match", stage, ip)
 	if stage == "sandbox" {
-		if i.in(ip, sandbox_list) {
-			return true
-		}
-	} else if stage == "smallflow" {
-		if i.in(ip, smallflow_list) {
+		if i.in(ip, sandboxList) {
 			return true
 		}
 	} else {
 		// 全流量阶段, 如果获取到的ip是属于沙盒、小流量的应该返回false
-		if i.in(ip, sandbox_list) || i.in(ip, smallflow_list) {
+		if i.in(ip, sandboxList) {
 			return false
 		}
 		return true
@@ -292,10 +283,8 @@ func (i *RangeIter) matchDeployStageIP(stage string, ip net.IP) bool {
 	return false
 }
 
+// in操作, 判断一个ip是否在一个ip列表里
 func (i *RangeIter) in(ip net.IP, ipList []net.IP) bool {
-	/*
-	 *  in操作, 判断一个ip是否在一个ip列表里
-	 */
 	if ip == nil || len(ipList) == 0 {
 		return false
 	}

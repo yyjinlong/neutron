@@ -15,7 +15,6 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
@@ -32,11 +31,13 @@ import (
 	"github.com/vishvananda/netlink"
 
 	"github.com/containernetworking/plugins/pkg/ip"
-	"github.com/containernetworking/plugins/pkg/ipam"
 	"github.com/containernetworking/plugins/pkg/ns"
 	"github.com/containernetworking/plugins/pkg/utils/buildversion"
 	"github.com/containernetworking/plugins/pkg/utils/sysctl"
 
+	"neutron/pkg/config"
+	"neutron/pkg/etcd"
+	"neutron/pkg/ipam"
 	"neutron/pkg/log"
 )
 
@@ -58,7 +59,7 @@ func main() {
 }
 
 func getClient(bytes []byte) (*clientv3.Client, error) {
-	conf, err := config.ReadLocalConf(bytes, envArgs)
+	conf, err := config.ReadLocalConf(bytes)
 	if err != nil {
 		return nil, err
 	}
@@ -113,11 +114,7 @@ func getDefaultRouteInterfaceName() (string, error) {
 func createMacvlan(conf *config.NetConf, ifName string, netns ns.NetNS) (*current.Interface, error) {
 	macvlan := &current.Interface{}
 
-	mode, err := modeFromString(conf.Mode)
-	if err != nil {
-		return nil, err
-	}
-
+	mode, _ := modeFromString()
 	log.Infof("Cmd add create macvlan master is: %s", conf.Master)
 	m, err := netlink.LinkByName(conf.Master)
 	if err != nil {
@@ -186,11 +183,11 @@ func createMacvlan(conf *config.NetConf, ifName string, netns ns.NetNS) (*curren
 	return macvlan, nil
 }
 
-func modeFromString(s string) (netlink.MacvlanMode, error) {
+func modeFromString() (netlink.MacvlanMode, error) {
 	return netlink.MACVLAN_MODE_BRIDGE, nil
 }
 
-func modeToString(mode netlink.MacvlanMode) (string, error) {
+func modeToString() (string, error) {
 	return "bridge", nil
 }
 
@@ -249,7 +246,7 @@ func cmdAdd(args *skel.CmdArgs) error {
 		return err
 	}
 
-	n, _, err := loadConf(client, args.Args)
+	n, cniVersion, err := loadConf(client, args.Args)
 	if err != nil {
 		return err
 	}
@@ -284,7 +281,7 @@ func cmdAdd(args *skel.CmdArgs) error {
 	if isLayer3 {
 		log.Infof("Cmd add put args.StdinData into ipam to add.")
 		// run the IPAM plugin and get back the config to apply
-		r, err := ipam.ExecAdd(client, n, args.Args)
+		r, err := ipam.ExecAdd(client, n, args)
 		if err != nil {
 			return err
 		}
@@ -292,7 +289,7 @@ func cmdAdd(args *skel.CmdArgs) error {
 		// Invoke ipam del if err to avoid ip leak
 		defer func() {
 			if err != nil {
-				ipam.ExecDel(client, n, args.Args)
+				ipam.ExecDel(client, n, args)
 			}
 		}()
 
@@ -315,7 +312,6 @@ func cmdAdd(args *skel.CmdArgs) error {
 		}
 
 		err = netns.Do(func(_ ns.NetNS) error {
-			// TODO: yangjinlong
 			if err := ipam.ConfigureIface(args.IfName, result); err != nil {
 				return err
 			}
@@ -377,7 +373,7 @@ func cmdDel(args *skel.CmdArgs) error {
 
 	if isLayer3 {
 		log.Info("Cmd del put args.StdinData into ipam to del.")
-		err = ipam.ExecDel(client, n, args.Args)
+		err = ipam.ExecDel(client, n, args)
 		if err != nil {
 			return err
 		}
@@ -421,7 +417,7 @@ func cmdCheck(args *skel.CmdArgs) error {
 
 	if isLayer3 {
 		// run the IPAM plugin and get back the config to apply
-		err = ipam.ExecCheck(client, n, args.Args)
+		err = ipam.ExecCheck(client, n, args)
 		if err != nil {
 			return err
 		}
@@ -509,17 +505,9 @@ func validateCniContainerInterface(intf current.Interface, parentIndex int, mode
 		return fmt.Errorf("Error: Container interface %s not of type macvlan", link.Attrs().Name)
 	}
 
-	mode, err := modeFromString(modeExpected)
+	mode, _ := modeFromString()
 	if macv.Mode != mode {
-		currString, err := modeToString(macv.Mode)
-		if err != nil {
-			return err
-		}
-		confString, err := modeToString(mode)
-		if err != nil {
-			return err
-		}
-		return fmt.Errorf("Container macvlan mode %s does not match expected value: %s", currString, confString)
+		return fmt.Errorf("Container macvlan mode %v does not match expected value: %s", macv.Mode, mode)
 	}
 
 	if intf.Mac != "" {

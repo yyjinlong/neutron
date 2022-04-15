@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package allocator
+package config
 
 import (
 	"fmt"
@@ -28,7 +28,7 @@ func (s *RangeSet) Contains(addr net.IP) bool {
 
 // RangeFor finds the range that contains an IP, or nil if not found
 func (s *RangeSet) RangeFor(addr net.IP) (*Range, error) {
-	if err := canonicalizeIP(&addr); err != nil {
+	if err := CanonicalizeIP(&addr); err != nil {
 		return nil, err
 	}
 

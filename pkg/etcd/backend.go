@@ -48,9 +48,9 @@ type Store struct {
 
 func (s *Store) Lock() error {
 	var (
-		leaseTTL = 60
-		getLock  = false
-		key      = GetLockKey(s.Service)
+		leaseTTL int64 = 60
+		getLock        = false
+		key            = GetLockKey(s.Service)
 	)
 
 	kv := clientv3.NewKV(s.EtcdClient)

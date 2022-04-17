@@ -1,0 +1,49 @@
+Cannot create namespace file "/var/run/netns/yyns": File exists
+{"level":"info","msg":"Cmd add begin to create macvlan.","time":"2022-04-17 07:07:44"}
+{"level":"info","msg":"Get current service args from CNI_ARGS: IgnoreUnknown=1;K8S_POD_NAMESPACE=default;K8S_POD_NAME=pay-10-online-84f8cc5d4b-8v4fw;K8S_POD_INFRA_CONTAINER_ID=jinlong","time":"2022-04-17 07:07:44"}
+{"level":"info","msg":"Get current service name is: pay","time":"2022-04-17 07:07:44"}
+{"level":"info","msg":"Get key: /neutron/service/pay from etcd value: {\"type\": \"neutron\", \"cniVersion\": \"0.3.1\", \"master\": \"bond0.388\", \"name\": \"neutron\", \"ipam\": {\"ranges\": [[{\"subnet\": \"10.21.28.0/24\", \"sandbox\": [\"10.21.28.150\"], \"gateway\": \"10.21.28.1\", \"rangeEnd\": \"10.21.28.160\", \"rangeStart\": \"10.21.28.150\"}]], \"routes\": [{\"dst\": \"0.0.0.0/0\"}], \"type\": \"ipam\"}}","time":"2022-04-17 07:07:44"}
+{"level":"info","msg":"Cmd add get plugin cni version: 0.3.1","time":"2022-04-17 07:07:44"}
+{"level":"info","msg":"Cmd add current isLayer3=true","time":"2022-04-17 07:07:44"}
+{"level":"info","msg":"Cmd add create macvlan master is: bond0.388","time":"2022-04-17 07:07:44"}
+{"level":"info","msg":"Cmd add link by name error: Link not found","time":"2022-04-17 07:07:44"}
+{"level":"info","msg":"Cmd add create macvlan tmpName is: vethe526fb49","time":"2022-04-17 07:07:44"}
+{"level":"info","msg":"Cmd add create macvlan ifName is: bond0.388","time":"2022-04-17 07:07:44"}
+{"level":"info","msg":"Cmd add put args.StdinData into ipam to add.","time":"2022-04-17 07:07:44"}
+{"level":"info","msg":"IPAM Cmd add start assign ip.","time":"2022-04-17 07:07:44"}
+{"level":"info","msg":"Get current service args from CNI_ARGS: IgnoreUnknown=1;K8S_POD_NAMESPACE=default;K8S_POD_NAME=pay-10-online-84f8cc5d4b-8v4fw;K8S_POD_INFRA_CONTAINER_ID=jinlong","time":"2022-04-17 07:07:44"}
+{"level":"info","msg":"Get current service name is: pay","time":"2022-04-17 07:07:44"}
+{"level":"info","msg":"Cmd add is have dns resolve conf file, result: ","time":"2022-04-17 07:07:44"}
+{"level":"info","msg":"Get allocates an ip, param container: jinlong ifname: bond0.388 env: IgnoreUnknown=1;K8S_POD_NAMESPACE=default;K8S_POD_NAME=pay-10-online-84f8cc5d4b-8v4fw;K8S_POD_INFRA_CONTAINER_ID=jinlong","time":"2022-04-17 07:07:44"}
+{"level":"info","msg":"Current requestedIP value: \u003cnil\u003e","time":"2022-04-17 07:07:44"}
+{"level":"info","msg":"Get deploy stage is: online","time":"2022-04-17 07:07:44"}
+{"level":"info","msg":"Error retrieving last reserved ip: Can not find last reserved ip!","time":"2022-04-17 07:07:44"}
+{"level":"info","msg":"Current deploy stage: online fetch ip: 10.21.28.150 will to match","time":"2022-04-17 07:07:44"}
+{"level":"info","msg":"Current deploy stage: online fetch ip: 10.21.28.151 will to match","time":"2022-04-17 07:07:44"}
+{"level":"info","msg":"Stage: online reserved ip: 10.21.28.151 result true","time":"2022-04-17 07:07:44"}
+{"level":"info","msg":"Stage: online reserved ip: 10.21.28.151 reserved: true","time":"2022-04-17 07:07:44"}
+{"level":"info","msg":"Cmd add fetch finally result ips: [{Version:4 Interface:\u003cnil\u003e Address:{IP:10.21.28.151 Mask:ffffff00} Gateway:10.21.28.1}]","time":"2022-04-17 07:07:44"}
+{
+    "cniVersion": "0.3.1",
+    "interfaces": [
+        {
+            "name": "bond0.388",
+            "mac": "c2:26:19:6e:71:d2",
+            "sandbox": "/var/run/netns/yyns"
+        }
+    ],
+    "ips": [
+        {
+            "version": "4",
+            "interface": 0,
+            "address": "10.21.28.151/24",
+            "gateway": "10.21.28.1"
+        }
+    ],
+    "routes": [
+        {
+            "dst": "0.0.0.0/0"
+        }
+    ],
+    "dns": {}
+}

@@ -507,7 +507,7 @@ func validateCniContainerInterface(intf current.Interface, parentIndex int, mode
 
 	mode, _ := modeFromString()
 	if macv.Mode != mode {
-		return fmt.Errorf("Container macvlan mode %v does not match expected value: %s", macv.Mode, mode)
+		return fmt.Errorf("Container macvlan mode %v does not match expected value: %v", macv.Mode, mode)
 	}
 
 	if intf.Mac != "" {

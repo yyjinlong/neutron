@@ -2,7 +2,7 @@ neutron(macvlan + ipam)
 -----------------------
 yangjinlong
 
-# neutron说明
+# neutron
 
 * 基于plugins原码包(0.8.2) 进行修改
 
@@ -12,20 +12,20 @@ yangjinlong
 * 整合ipam为一个插件
 
 macvlan配置如下:
-```
+```bash
 {
-    "cniVersion":"0.3.1",
-    "name": "neutron",
-    "type": "neutron",
-    "etcd": {
-        "urls": "https://10.12.28.4:2379",
-        "cafile": "/etc/etcd/ssl/etcd-ca.pem",
-        "keyfile": "/etc/etcd/ssl/etcd-key.pem",
-        "certfile": "/etc/etcd/ssl/etcd.pem"
-    },
-    "ipam": {
-        "type": "ipam"
-    }
+  "cniVersion":"0.3.1",
+  "name": "neutron",
+  "type": "neutron",
+  "etcd": {
+    "urls": "https://10.12.28.4:2379",
+    "cafile": "/etc/etcd/ssl/etcd-ca.pem",
+    "keyfile": "/etc/etcd/ssl/etcd-key.pem",
+    "certfile": "/etc/etcd/ssl/etcd.pem"
+  },
+  "ipam": {
+    "type": "ipam"
+  }
 }
 ```
 
@@ -43,15 +43,14 @@ macvlan配置如下:
 * 管理ip生命周期
 
 服务配置如下:
-```
+```bash
 {
+  "cniVersion": "0.3.1",
+  "name": "neutron",
+  "type": "neutron",
+  "master": "bond0.388",
   "ipam": {
     "type": "ipam",
-    "routes": [
-      {
-        "dst": "0.0.0.0/0"
-      }
-    ],
     "ranges": [
       [
         {
@@ -64,12 +63,13 @@ macvlan配置如下:
           "subnet": "10.21.28.0/24"
         }
       ]
+    ],
+    "routes": [
+      {
+        "dst": "0.0.0.0/0"
+      }
     ]
-  },
-  "name": "neutron",
-  "master": "bond0.388",
-  "cniVersion": "0.3.1",
-  "type": "neutron"
+  }
 }
 ```
 
@@ -82,7 +82,7 @@ macvlan配置如下:
 ## macvlan配置说明
 
 配置举例:
-```
+```bash
 {
 	"cniVersion": "0.3.1",
 	"name": "macvlannet",
@@ -101,23 +101,14 @@ macvlan配置如下:
 * `mode` (string, optional): one of "bridge", "private", "vepa", "passthru". Defaults to "bridge".
 * `ipam` (dictionary, required): IPAM configuration to be used for this network. For interface only without ip address, create empty dictionary.
 
-## IPAM(IP address management plugin)
+## IPAM(IP address management plugin) 
 
-* 改用etcd进行集中管理及存储
-
-## 传统ipam插件测试举例
-
+调试运行:
 ```bash
 $ echo '{ "cniVersion": "0.3.1", "name": "my-macvlan", "ipam": { "type": "my-ipam", "ranges": [ [{"subnet": "203.0.113.0/24"}], [{"subnet": "2001:db8:1::/64"}]], "dataDir": "/tmp/cni-example"  } }' | CNI_COMMAND=ADD CNI_CONTAINERID=example CNI_NETNS=/dev/null CNI_IFNAME=dummy0 CNI_PATH=. go run main.go dns.go
 ```
 
-# 调试运行
-```bash
-cat /etc/cni/net.d/10-maclannet.conf | go run main.go dns.go
-```
-
-## 参数说明
-
+参数说明:
 * `type` (string, required): "my-ipam".
 * `routes` (string, optional): list of routes to add to the container namespace. Each route is a dictionary with "dst" and optional "gw" fields. If "gw" is omitted, value of "gateway" will be used.
 * `resolvConf` (string, optional): Path to a `resolv.conf` on the host to parse and return as the DNS configuration

@@ -22,7 +22,6 @@ import (
 	"github.com/containernetworking/cni/pkg/types/current"
 	"github.com/containernetworking/plugins/pkg/ip"
 	"github.com/containernetworking/plugins/pkg/utils/sysctl"
-
 	"github.com/vishvananda/netlink"
 )
 

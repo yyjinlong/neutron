@@ -30,12 +30,6 @@ import (
 	"neutron/pkg/log"
 )
 
-type IPAllocator struct {
-	rangeset *config.RangeSet
-	store    etcd.Storager
-	rangeID  string // Used for tracking last reserved ip
-}
-
 func NewIPAllocator(s *config.RangeSet, store etcd.Storager, id int) *IPAllocator {
 	return &IPAllocator{
 		rangeset: s,
@@ -44,7 +38,13 @@ func NewIPAllocator(s *config.RangeSet, store etcd.Storager, id int) *IPAllocato
 	}
 }
 
-// 获取当前发布阶段: 沙盒、小流量、全流量
+type IPAllocator struct {
+	rangeset *config.RangeSet
+	store    etcd.Storager
+	rangeID  string // Used for tracking last reserved ip
+}
+
+// 获取当前发布阶段: 沙盒、全流量
 func (a *IPAllocator) getDeployStage(envArgs string) string {
 	pairs := strings.Split(envArgs, ";")
 	for _, pair := range pairs {
@@ -126,7 +126,7 @@ func (a *IPAllocator) Get(id string, ifname string, envArgs string, requestedIP 
 				break
 			}
 
-			// NOTE: 判断当前获取到的ip, 是否匹配当前的分级发布阶段; 同时不存在已分配的ip列表里.
+			// NOTE: 判断当前获取到的ip, 是否匹配当前的分级发布阶段; 同时不在已分配的ip列表里
 			if iter.matchDeployStageIP(stage, reservedIP.IP) && !a.store.IsIPExist(reservedIP.IP) {
 				log.Infof("Stage: %s reserved ip: %s result true", stage, reservedIP.IP)
 				reserved, err := a.store.Reserve(id, ifname, reservedIP.IP, a.rangeID)
@@ -283,7 +283,7 @@ func (i *RangeIter) matchDeployStageIP(stage string, ip net.IP) bool {
 	return false
 }
 
-// in操作, 判断一个ip是否在一个ip列表里
+// 判断一个ip是否在一个ip列表里
 func (i *RangeIter) in(ip net.IP, ipList []net.IP) bool {
 	if ip == nil || len(ipList) == 0 {
 		return false

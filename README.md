@@ -29,6 +29,13 @@ macvlan配置如下:
 }
 ```
 
+参数说明:
+* `name` (string, required): the name of the network
+* `type` (string, required): "macvlan"
+* `master` (string, optional): name of the host interface to enslave. Defaults to default route interace.
+* `mode` (string, optional): one of "bridge", "private", "vepa", "passthru". Defaults to "bridge".
+* `ipam` (dictionary, required): IPAM configuration to be used for this network. For interface only without ip address, create empty dictionary.
+
 流程:
 * 读取本地macvlan配置, 获取etcd配置, 连接etcd
 * 根据CNI_ARGS获取发布阶段、服务名, 从etcd读取该服务的配置
@@ -56,11 +63,11 @@ macvlan配置如下:
         {
           "rangeStart": "10.21.28.150",
           "rangeEnd": "10.21.28.160",
+          "subnet": "10.21.28.0/24",
           "gateway": "10.21.28.1",
           "sandbox": [
             "10.21.28.150"
-          ],
-          "subnet": "10.21.28.0/24"
+          ]
         }
       ]
     ],
@@ -73,43 +80,8 @@ macvlan配置如下:
 }
 ```
 
-## 编译neutron, 并移动到/opt/cni/bin下
-```bash
-[root@jinlong neutron]# go build main.go -o neutron
-[root@jinlong neutron]# mv neutron /opt/cni/bin/
-```
-
-## macvlan配置说明
-
-配置举例:
-```bash
-{
-	"cniVersion": "0.3.1",
-	"name": "macvlannet",
-	"type": "my-macvlan",
-	"master": "bond0.444",
-	"ipam": {
-		"type": "my-ipam"
-	}
-}
-```
-
 参数说明:
-* `name` (string, required): the name of the network
-* `type` (string, required): "macvlan"
-* `master` (string, optional): name of the host interface to enslave. Defaults to default route interace.
-* `mode` (string, optional): one of "bridge", "private", "vepa", "passthru". Defaults to "bridge".
-* `ipam` (dictionary, required): IPAM configuration to be used for this network. For interface only without ip address, create empty dictionary.
-
-## IPAM(IP address management plugin) 
-
-调试运行:
-```bash
-$ echo '{ "cniVersion": "0.3.1", "name": "my-macvlan", "ipam": { "type": "my-ipam", "ranges": [ [{"subnet": "203.0.113.0/24"}], [{"subnet": "2001:db8:1::/64"}]], "dataDir": "/tmp/cni-example"  } }' | CNI_COMMAND=ADD CNI_CONTAINERID=example CNI_NETNS=/dev/null CNI_IFNAME=dummy0 CNI_PATH=. go run main.go dns.go
-```
-
-参数说明:
-* `type` (string, required): "my-ipam".
+* `type` (string, required): "ipam".
 * `routes` (string, optional): list of routes to add to the container namespace. Each route is a dictionary with "dst" and optional "gw" fields. If "gw" is omitted, value of "gateway" will be used.
 * `resolvConf` (string, optional): Path to a `resolv.conf` on the host to parse and return as the DNS configuration
 * `dataDir` (string, optional): Path to a directory to use for maintaining state, e.g. which IPs have been allocated to which containers
@@ -118,3 +90,10 @@ $ echo '{ "cniVersion": "0.3.1", "name": "my-macvlan", "ipam": { "type": "my-ipa
 	* `rangeStart` (string, optional): IP inside of "subnet" from which to start allocating addresses. Defaults to ".2" IP inside of the "subnet" block.
 	* `rangeEnd` (string, optional): IP inside of "subnet" with which to end allocating addresses. Defaults to ".254" IP inside of the "subnet" block for ipv4, ".255" for IPv6
 	* `gateway` (string, optional): IP inside of "subnet" to designate as the gateway. Defaults to ".1" IP inside of the "subnet" block.
+
+## 编译neutron, 并移动到/opt/cni/bin下
+
+```bash
+[root@jinlong neutron]# go build main.go -o neutron
+[root@jinlong neutron]# mv neutron /opt/cni/bin/
+```

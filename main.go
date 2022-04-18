@@ -26,14 +26,13 @@ import (
 	"github.com/containernetworking/cni/pkg/types"
 	"github.com/containernetworking/cni/pkg/types/current"
 	"github.com/containernetworking/cni/pkg/version"
-	"github.com/coreos/etcd/clientv3"
-	"github.com/j-keck/arping"
-	"github.com/vishvananda/netlink"
-
 	"github.com/containernetworking/plugins/pkg/ip"
 	"github.com/containernetworking/plugins/pkg/ns"
 	"github.com/containernetworking/plugins/pkg/utils/buildversion"
 	"github.com/containernetworking/plugins/pkg/utils/sysctl"
+	"github.com/coreos/etcd/clientv3"
+	"github.com/j-keck/arping"
+	"github.com/vishvananda/netlink"
 
 	"neutron/pkg/config"
 	"neutron/pkg/etcd"

@@ -72,7 +72,7 @@ func (ec *EtcdConf) Connect(urls, caFile, keyFile, certFile string) (*clientv3.C
 func (ec *EtcdConf) GetServiceConf(etcdClient *clientv3.Client, envArgs string) ([]byte, error) {
 	service, _ := util.GetCurrentServiceAndPod(envArgs)
 	if service == "" {
-		return nil, fmt.Errorf("fetch service from args.Args: %s is empty", envArgs)
+		return nil, fmt.Errorf("fetch service from args: %s is empty", envArgs)
 	}
 
 	return ec.GetConfigFromEtcd(etcdClient, service)

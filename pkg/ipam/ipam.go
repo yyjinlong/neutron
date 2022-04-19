@@ -61,10 +61,10 @@ func ExecAdd(client *clientv3.Client, conf *config.NetConf, args *skel.CmdArgs) 
 	envArgs := args.Args
 	service, podname := util.GetCurrentServiceAndPod(envArgs)
 	if service == "" {
-		return nil, fmt.Errorf("IPAM Cmd add get service from args: %s failed", args.Args)
+		return nil, fmt.Errorf("IPAM Cmd add get service from args: %s failed", envArgs)
 	}
 
-	ipamConf, _, err := config.LoadIPAMConfig(conf, args.Args)
+	ipamConf, _, err := config.LoadIPAMConfig(conf, envArgs)
 	if err != nil {
 		return nil, err
 	}
@@ -104,8 +104,8 @@ func ExecAdd(client *clientv3.Client, conf *config.NetConf, args *skel.CmdArgs) 
 			}
 		}
 
-		// NOTE: 将args.Args传给Get用于获取发布阶段
-		ipConf, err := allocator.Get(args.ContainerID, args.IfName, args.Args, requestedIP)
+		// 获取发布阶段
+		ipConf, err := allocator.Get(args.ContainerID, args.IfName, envArgs, requestedIP)
 		if err != nil {
 			// Deallocate all already allocated IPs
 			for _, alloc := range allocs {
@@ -142,10 +142,10 @@ func ExecDel(client *clientv3.Client, conf *config.NetConf, args *skel.CmdArgs) 
 	envArgs := args.Args
 	service, podname := util.GetCurrentServiceAndPod(envArgs)
 	if service == "" {
-		return fmt.Errorf("Cmd add fetch service from args.Args: %s is failed.", envArgs)
+		return fmt.Errorf("Cmd add fetch service from args: %s is failed.", envArgs)
 	}
 
-	ipamConf, _, err := config.LoadIPAMConfig(conf, args.Args)
+	ipamConf, _, err := config.LoadIPAMConfig(conf, envArgs)
 	if err != nil {
 		return err
 	}

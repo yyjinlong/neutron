@@ -91,9 +91,51 @@ macvlan配置如下:
 	* `rangeEnd` (string, optional): IP inside of "subnet" with which to end allocating addresses. Defaults to ".254" IP inside of the "subnet" block for ipv4, ".255" for IPv6
 	* `gateway` (string, optional): IP inside of "subnet" to designate as the gateway. Defaults to ".1" IP inside of the "subnet" block.
 
+etcd设置服务key:
+```bash
+[root@dx-kvm00 neutron]# myetcdctl put /neutron/service/pay '{"type": "neutron", "cniVersion": "0.3.1", "master": "bond0.388", "name": "neutron", "ipam": {"ranges": [[{"subnet": "10.21.28.0/24", "sandbox": ["10.21.28.150"], "gateway": "10.21.28.1", "rangeEnd": "10.21.28.160", "rangeStart": "10.21.28.150"}]], "routes": [{"dst": "0.0.0.0/0"}], "type": "ipam"}}'
+```
+
+## 测试
+
+执行:
+```bash
+[root@dx-kvm00 neutron]# ./test.sh
+```
+
+查看命名空间:
+```bash
+[root@dx-kvm00 neutron]# ip netns exec yyns ip a
+1: lo: <LOOPBACK> mtu 65536 qdisc noop state DOWN qlen 1
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+2: bond0@if355: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UNKNOWN
+    link/ether 9e:fd:a7:94:29:79 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 10.21.28.151/24 brd 10.21.28.255 scope global bond0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::9cfd:a7ff:fe94:2979/64 scope link
+       valid_lft forever preferred_lft forever
+```
+我们看到网卡名被重命名为了bond0@if355
+
+查看etcd:
+```bash
+[root@dx-kvm00 ~]# myetcdctl get /neutron --prefix --keys-only
+/neutron/endpoints/pay/10.21.28.151
+/neutron/lastreserved/pay/0
+/neutron/service/pay
+
+[root@dx-kvm00 ~]# myetcdctl get /neutron/endpoints/pay/10.21.28.151
+/neutron/endpoints/pay/10.21.28.151
+dx-kvm00.hp:jinlong:pay-10-online-84f8cc5d4b-8v4fw
+
+[root@dx-kvm00 ~]# myetcdctl get /neutron/lastreserved/pay/0
+/neutron/lastreserved/pay/0
+10.21.28.151
+```
+
 ## 编译neutron, 并移动到/opt/cni/bin下
 
 ```bash
-[root@jinlong neutron]# go build main.go -o neutron
-[root@jinlong neutron]# mv neutron /opt/cni/bin/
+[root@dx-kvm00 neutron]# go build main.go -o neutron
+[root@dx-kvm00 neutron]# mv neutron /opt/cni/bin/
 ```

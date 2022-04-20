@@ -117,7 +117,7 @@ func createMacvlan(conf *config.NetConf, ifName string, netns ns.NetNS) (*curren
 	log.Infof("Cmd add create macvlan master is: %s", conf.Master)
 	m, err := netlink.LinkByName(conf.Master)
 	if err != nil {
-		log.Infof("Cmd add link %s %s", conf.Master, err)
+		log.Infof("Cmd add link %s: %s", conf.Master, err)
 		if err.Error() == "Link not found" {
 			log.Infof("Cmd add begin create vlan interface: %s", conf.Master)
 			m, err = createVlanInterface(conf)
@@ -149,7 +149,7 @@ func createMacvlan(conf *config.NetConf, ifName string, netns ns.NetNS) (*curren
 		return nil, fmt.Errorf("failed to create macvlan: %v", err)
 	}
 	log.Infof("Cmd add ip link add link %s dev %s type macvlan mode bridge", conf.Master, tmpName)
-	log.Infof("Cmd add create macvlan: %s success", ifName)
+	log.Infof("Cmd add create macvlan: %s success", tmpName)
 
 	err = netns.Do(func(_ ns.NetNS) error {
 		// TODO: duplicate following lines for ipv6 support, when it will be added in other places
@@ -213,7 +213,7 @@ func createVlanInterface(conf *config.NetConf) (netlink.Link, error) {
 	if pLink.Attrs().OperState != netlink.OperUp {
 		return nil, fmt.Errorf("Cmd add vlan parentt device: %s not up.", pName)
 	}
-	log.Infof("Cmd add create vlan interface get pLink: %+v", pLink)
+	log.Infof("Cmd add create vlan interface get pLink: %s", pLink.Attrs().Name)
 
 	// step1 创建vlan接口 类似: ip link add link bond0 name bond0.1234 type vlan id 1234
 	vl := &netlink.Vlan{
@@ -243,7 +243,7 @@ func createVlanInterface(conf *config.NetConf) (netlink.Link, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Infof("Cmd add ip link show: %+v", mlink)
+	log.Infof("Cmd add ip link show: %s", mlink.Attrs().Name)
 	return mlink, nil
 }
 
@@ -287,13 +287,13 @@ func cmdAdd(args *skel.CmdArgs) error {
 	result := &current.Result{CNIVersion: cniVersion, Interfaces: []*current.Interface{macvlanInterface}}
 
 	if isLayer3 {
-		log.Infof("Cmd add invoke ipam allocate ip")
+		log.Infof("Cmd add invoke ipam to allocate ip")
 		// run the IPAM plugin and get back the config to apply
 		r, err := ipam.ExecAdd(client, n, args)
 		if err != nil {
 			return err
 		}
-		log.Infof("Cmd add allocate ip success, result: %+v", r)
+		log.Infof("Cmd add allocate ip success")
 
 		// Invoke ipam del if err to avoid ip leak
 		defer func() {
@@ -364,9 +364,7 @@ func cmdAdd(args *skel.CmdArgs) error {
 	return types.PrintResult(result, cniVersion)
 }
 
-// Equivalent to: `ip link del link dev bond0.388`
 func cmdDel(args *skel.CmdArgs) error {
-	log.Info("Cmd del begin to del macvlan.")
 	client, err := getClient(args.StdinData)
 	if err != nil {
 		return err
@@ -381,11 +379,12 @@ func cmdDel(args *skel.CmdArgs) error {
 	log.Infof("Cmd del current isLayer3=%t", isLayer3)
 
 	if isLayer3 {
-		log.Info("Cmd del put args.StdinData into ipam to del.")
+		log.Infof("Cmd del invoke ipam to del allocated ip")
 		err = ipam.ExecDel(client, n, args)
 		if err != nil {
 			return err
 		}
+		log.Infof("(1) delete container ip success")
 	}
 
 	if args.Netns == "" {
@@ -402,6 +401,7 @@ func cmdDel(args *skel.CmdArgs) error {
 		}
 		return nil
 	})
+	log.Infof("(2) delete container netns: %s success", args.Netns)
 
 	return err
 }

@@ -68,8 +68,7 @@ func ExecAdd(client *clientv3.Client, conf *config.NetConf, args *skel.CmdArgs) 
 	if err != nil {
 		return nil, err
 	}
-	log.Infof("IPAM add get ipam conf: %+v", ipamConf)
-	log.Infof("IPAM add is have dns resolve conf file, result: %s", ipamConf.ResolvConf)
+	log.Infof("IPAM add get IPArgs: %+v", ipamConf.IPArgs)
 
 	result := &current.Result{}
 
@@ -106,7 +105,7 @@ func ExecAdd(client *clientv3.Client, conf *config.NetConf, args *skel.CmdArgs) 
 				break
 			}
 		}
-		log.Infof("IPAM add get requestedIP: %v", requestedIP)
+		log.Infof("IPAM add get requestedIP is: %v", requestedIP)
 
 		// 获取发布阶段
 		ipConf, err := ipAllocator.Get(args.ContainerID, args.IfName, envArgs, requestedIP)
@@ -122,7 +121,7 @@ func ExecAdd(client *clientv3.Client, conf *config.NetConf, args *skel.CmdArgs) 
 
 		result.IPs = append(result.IPs, ipConf)
 	}
-	log.Infof("Cmd add fetch finally result ips: %s", result.IPs)
+	log.Infof("Cmd add fetch finally result ips: %+v", result.IPs)
 
 	// If an IP was requested that wasn't fulfilled, fail
 	if len(requestedIPs) != 0 {
@@ -146,7 +145,7 @@ func ExecDel(client *clientv3.Client, conf *config.NetConf, args *skel.CmdArgs) 
 	envArgs := args.Args
 	service, podname := util.GetCurrentServiceAndPod(envArgs)
 	if service == "" {
-		return fmt.Errorf("Cmd add fetch service from args: %s is failed.", envArgs)
+		return fmt.Errorf("Cmd add fetch service from args: %s is failed", envArgs)
 	}
 
 	ipamConf, _, err := config.LoadIPAMConfig(conf, envArgs)
@@ -172,6 +171,6 @@ func ExecDel(client *clientv3.Client, conf *config.NetConf, args *skel.CmdArgs) 
 	if errors != nil {
 		return fmt.Errorf(strings.Join(errors, ";"))
 	}
-	log.Infof("IPAM del release container: %s success.", args.ContainerID)
+	log.Infof("IPAM del release container: %s success", args.ContainerID)
 	return nil
 }

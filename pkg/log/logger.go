@@ -32,7 +32,8 @@ func InitLogger(logFile string) {
 	allWriters := io.MultiWriter(writers...)
 
 	logging.SetFormatter(&logrus.JSONFormatter{
-		TimestampFormat: "2006-01-02 15:03:04",
+		TimestampFormat:   "2006-01-02 15:03:04",
+		DisableHTMLEscape: true,
 
 		CallerPrettyfier: func(frame *runtime.Frame) (function string, file string) {
 			filename := path.Base(frame.File)

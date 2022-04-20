@@ -66,8 +66,6 @@ func (a *IPAllocator) getDeployStage(envArgs string) string {
 
 // Get allocates an IP
 func (a *IPAllocator) Get(id string, ifname string, envArgs string, requestedIP net.IP) (*current.IPConfig, error) {
-	log.Infof("Get allocates an ip, param container: %s ifname: %s env: %s", id, ifname, envArgs)
-	log.Infof("Get allocates current requestedIP value: %s", requestedIP)
 	a.store.Lock()
 	defer a.store.Unlock()
 
@@ -76,10 +74,12 @@ func (a *IPAllocator) Get(id string, ifname string, envArgs string, requestedIP 
 	if stage == "" {
 		return nil, fmt.Errorf("Parse deploy stage is empty.")
 	}
+	log.Infof("Get allocates current deploy stage: %s", stage)
 
 	var reservedIP *net.IPNet
 	var gw net.IP
 
+	log.Infof("Get allocates current requestedIP value: %s", requestedIP)
 	if requestedIP != nil {
 		log.Infof("Get allocates requestedIP != nil")
 		if err := config.CanonicalizeIP(&requestedIP); err != nil {
@@ -125,7 +125,7 @@ func (a *IPAllocator) Get(id string, ifname string, envArgs string, requestedIP 
 		if err != nil {
 			return nil, err
 		}
-		log.Infof("Get allocates get iter: %+v", iter)
+		log.Infof("Get allocates get iter: %+v", *iter)
 
 		for {
 			reservedIP, gw = iter.Next()
@@ -136,7 +136,7 @@ func (a *IPAllocator) Get(id string, ifname string, envArgs string, requestedIP 
 
 			// NOTE: 判断当前获取到的ip, 是否匹配当前的分级发布阶段; 同时不在已分配的ip列表里
 			if iter.matchDeployStageIP(stage, reservedIP.IP) && !a.store.IsIPExist(reservedIP.IP) {
-				log.Infof("Stage: %s reserved ip: %s result true", stage, reservedIP.IP)
+				log.Infof("Stage: %s reserved ip: %s is matched", stage, reservedIP.IP)
 				reserved, err := a.store.Reserve(id, ifname, reservedIP.IP, a.rangeID)
 				if err != nil {
 					return nil, err

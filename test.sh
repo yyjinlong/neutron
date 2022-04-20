@@ -5,6 +5,7 @@ infra_container="jinlong"
 pod="pay-10-online-84f8cc5d4b-8v4fw"
 
 ip netns add $ns
+echo "创建网络命名空间: $ns 成功"
 
 export CNI_NETNS=/var/run/netns/$ns
 

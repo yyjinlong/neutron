@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"github.com/coreos/etcd/clientv3"
+
+	"neutron/pkg/log"
 )
 
 // Store implements the Store interface
@@ -135,12 +137,14 @@ func (s *Store) Reserve(id string, ifname string, ip net.IP, rangeID string) (bo
 	if _, err := s.EtcdClient.Put(context.TODO(), key, value); err != nil {
 		return false, nil
 	}
+	log.Infof("reserve store endpoint key: %s value: %s success", key, value)
 
 	// key的格式: /neutron/lastreserved/pay/0
 	key = fmt.Sprintf("%s/%s", GetLastReservedKey(s.Service), rangeID)
 	if _, err := s.EtcdClient.Put(context.TODO(), key, ip.String()); err != nil {
 		return false, nil
 	}
+	log.Infof("reserve store lastreserved key: %s value: %s success", key, value)
 	return true, nil
 }
 
@@ -165,6 +169,7 @@ func (s *Store) Release(ip net.IP) error {
 	if _, err := s.EtcdClient.Delete(context.TODO(), key); err != nil {
 		return err
 	}
+	log.Infof("release endpoint key: %s success", key)
 	return nil
 }
 
@@ -188,6 +193,7 @@ func (s *Store) ReleaseByID(id string, ifname string) error {
 					return err
 				}
 			}
+			log.Infof("release endpoint key: %s by container id: %s success", string(kv.Key), id)
 		}
 	}
 	return nil

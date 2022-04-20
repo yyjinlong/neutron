@@ -79,7 +79,7 @@ func (a *IPAllocator) Get(id string, ifname string, envArgs string, requestedIP 
 	var reservedIP *net.IPNet
 	var gw net.IP
 
-	log.Infof("Get allocates current requestedIP value: %s", requestedIP)
+	log.Infof("Get allocates current requestedIP value: %s", requestedIP) // <nil>
 	if requestedIP != nil {
 		log.Infof("Get allocates requestedIP != nil")
 		if err := config.CanonicalizeIP(&requestedIP); err != nil {

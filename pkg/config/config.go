@@ -120,7 +120,8 @@ func ReadTotalConf(std []byte) (*NetConf, error) {
 	return &conf, nil
 }
 
-// NewIPAMConfig creates a NetworkConfig from the given network name.
+// LoadIPAMConfig 根据给定网络名创建网络配置NetworkConfig
+// 功能: ipam.Ranges地址段校验、ipam.Ranges网段重叠校验
 func LoadIPAMConfig(n *NetConf, envArgs string) (*IPAMConfig, string, error) {
 	if n.IPAM == nil {
 		return nil, "", fmt.Errorf("IPAM config missing 'ipam' key")

@@ -68,7 +68,7 @@ func ExecAdd(client *clientv3.Client, conf *config.NetConf, args *skel.CmdArgs) 
 	if err != nil {
 		return nil, err
 	}
-	log.Infof("IPAM add get IPArgs: %+v", ipamConf.IPArgs)
+	log.Infof("IPAM add get IPArgs: %+v", ipamConf.IPArgs) // []
 
 	result := &current.Result{}
 
@@ -89,7 +89,7 @@ func ExecAdd(client *clientv3.Client, conf *config.NetConf, args *skel.CmdArgs) 
 	for _, ip := range ipamConf.IPArgs {
 		requestedIPs[ip.String()] = ip
 	}
-	log.Infof("IPAM add get requestedIPs: %+v", requestedIPs)
+	log.Infof("IPAM add get requestedIPs: %+v", requestedIPs) // map[]
 
 	for idx, rangeset := range ipamConf.Ranges {
 		ipAllocator := allocator.NewIPAllocator(&rangeset, store, idx)
@@ -105,7 +105,7 @@ func ExecAdd(client *clientv3.Client, conf *config.NetConf, args *skel.CmdArgs) 
 				break
 			}
 		}
-		log.Infof("IPAM add get requestedIP is: %v", requestedIP)
+		log.Infof("IPAM add get requestedIP is: %v", requestedIP) // <nil>
 
 		// 获取发布阶段
 		ipConf, err := ipAllocator.Get(args.ContainerID, args.IfName, envArgs, requestedIP)

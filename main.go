@@ -321,6 +321,7 @@ func cmdAdd(args *skel.CmdArgs) error {
 		}
 
 		err = netns.Do(func(_ ns.NetNS) error {
+			// 在对应命名空间下, 将ip信息写入到macvlan对应的网卡上
 			if err := ipam.ConfigureIface(args.IfName, result); err != nil {
 				return err
 			}

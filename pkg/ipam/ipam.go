@@ -107,7 +107,7 @@ func ExecAdd(client *clientv3.Client, conf *config.NetConf, args *skel.CmdArgs) 
 		}
 		log.Infof("IPAM add get requestedIP is: %v", requestedIP) // <nil>
 
-		// 获取发布阶段
+		// 分配ip, 并写入etcd
 		ipConf, err := ipAllocator.Get(args.ContainerID, args.IfName, envArgs, requestedIP)
 		if err != nil {
 			// Deallocate all already allocated IPs

@@ -115,6 +115,12 @@ func (s *Store) Close() error {
 }
 
 func (s *Store) Reserve(id string, ifname string, ip net.IP, rangeID string) (bool, error) {
+	/*
+	 * param id: container id
+	 * param ifname: network interface name
+	 * param ip: reserve(预定) ip
+	 * param rangeID: range list index
+	 */
 	// key的格式: /neutron/endpoints/pay/10.21.28.4
 	key := fmt.Sprintf("%s/%s", GetEndpointsKey(s.Service), ip.String())
 	resp, err := s.EtcdClient.Get(context.TODO(), key)
@@ -138,7 +144,7 @@ func (s *Store) Reserve(id string, ifname string, ip net.IP, rangeID string) (bo
 	return true, nil
 }
 
-// LastReservedIP returns the last reserved IP if exists
+// LastReservedIP 返回指定rangeID下该服务分配的最后一个ip
 func (s *Store) LastReservedIP(rangeID string) (net.IP, error) {
 	// key的格式: /neutron/lastreserved/pay/0
 	key := fmt.Sprintf("%s/%s", GetLastReservedKey(s.Service), rangeID)
@@ -187,13 +193,13 @@ func (s *Store) ReleaseByID(id string, ifname string) error {
 	return nil
 }
 
-// GetByID returns the IPs which have been allocated to the specific ID
+// GetByID 返回指定container id已经分配的ip信息
 func (s *Store) GetByID(id string, ifname string) []net.IP {
 	/*
 	 * param id: container id
 	 * param ifname: network interface name
 	 */
-	result := []net.IP{}
+	result := make([]net.IP, 0)
 	key := GetEndpointsKey(s.Service)
 	resp, err := s.EtcdClient.Get(context.TODO(), key, clientv3.WithPrefix())
 	if err != nil {
@@ -215,6 +221,7 @@ func (s *Store) GetByID(id string, ifname string) []net.IP {
 	return nil
 }
 
+// FindByID 查询container id是否已分配ip
 func (s *Store) FindByID(id string, ifname string) bool {
 	/*
 	 * param id: container id
@@ -239,7 +246,7 @@ func (s *Store) FindByID(id string, ifname string) bool {
 
 // GetAllEndpoins 获取当前服务所有的ip列表
 func (s *Store) GetAllEndpoins() ([]net.IP, error) {
-	results := []net.IP{}
+	results := make([]net.IP, 0)
 	key := GetEndpointsKey(s.Service)
 	resp, err := s.EtcdClient.Get(context.TODO(), key, clientv3.WithPrefix())
 	if err != nil {

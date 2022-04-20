@@ -16,6 +16,7 @@ require (
 	github.com/j-keck/arping v1.0.1
 	github.com/onsi/ginkgo v0.0.0-20151202141238-7f8ab55aaf3b
 	github.com/onsi/gomega v0.0.0-20151007035656-2152b45fa28a
+	github.com/rogpeppe/godef v1.1.2 // indirect
 	github.com/safchain/ethtool v0.0.0-20200609180057-ab94f15152e7
 	github.com/sirupsen/logrus v1.6.0
 	github.com/vishvananda/netlink v1.1.0

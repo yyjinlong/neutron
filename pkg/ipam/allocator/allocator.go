@@ -44,7 +44,7 @@ type IPAllocator struct {
 	rangeID  string // Used for tracking last reserved ip
 }
 
-// 获取当前发布阶段: 沙盒、全流量
+// 获取当前发布阶段: 沙盒、全流量 如: K8S_POD_NAME=pay-10-online-84f8cc5d4b-8v4fw
 func (a *IPAllocator) getDeployStage(envArgs string) string {
 	pairs := strings.Split(envArgs, ";")
 	for _, pair := range pairs {
@@ -67,7 +67,7 @@ func (a *IPAllocator) getDeployStage(envArgs string) string {
 // Get allocates an IP
 func (a *IPAllocator) Get(id string, ifname string, envArgs string, requestedIP net.IP) (*current.IPConfig, error) {
 	log.Infof("Get allocates an ip, param container: %s ifname: %s env: %s", id, ifname, envArgs)
-	log.Infof("Current requestedIP value: %s", requestedIP)
+	log.Infof("Get allocates current requestedIP value: %s", requestedIP)
 	a.store.Lock()
 	defer a.store.Unlock()
 
@@ -81,6 +81,7 @@ func (a *IPAllocator) Get(id string, ifname string, envArgs string, requestedIP 
 	var gw net.IP
 
 	if requestedIP != nil {
+		log.Infof("Get allocates requestedIP != nil")
 		if err := config.CanonicalizeIP(&requestedIP); err != nil {
 			return nil, err
 		}
@@ -89,6 +90,7 @@ func (a *IPAllocator) Get(id string, ifname string, envArgs string, requestedIP 
 		if err != nil {
 			return nil, err
 		}
+		log.Infof("Get allocates range: %+v for requestedIP: %v", r, requestedIP)
 
 		if requestedIP.Equal(r.Gateway) {
 			return nil, fmt.Errorf("requested ip %s is subnet's gateway", requestedIP.String())
@@ -98,6 +100,7 @@ func (a *IPAllocator) Get(id string, ifname string, envArgs string, requestedIP 
 		if err != nil {
 			return nil, err
 		}
+		log.Infof("Get allocates reserve on etcd result: %+v", reserved)
 		if !reserved {
 			return nil, fmt.Errorf("requested IP address %s is not available in range set %s", requestedIP, a.rangeset.String())
 		}
@@ -105,6 +108,7 @@ func (a *IPAllocator) Get(id string, ifname string, envArgs string, requestedIP 
 		gw = r.Gateway
 
 	} else {
+		log.Infof("Get allocates requestedIP == nil")
 		// try to get allocated IPs for this given id, if exists, just return error
 		// because duplicate allocation is not allowed in SPEC
 		// https://github.com/containernetworking/cni/blob/master/SPEC.md
@@ -115,16 +119,20 @@ func (a *IPAllocator) Get(id string, ifname string, envArgs string, requestedIP 
 				return nil, fmt.Errorf("%s has been allocated to %s, duplicate allocation is not allowed", allocatedIP.String(), id)
 			}
 		}
+		log.Infof("Get allocates check container id: %s not duplicate allocation", id)
 
 		iter, err := a.GetIter()
 		if err != nil {
 			return nil, err
 		}
+		log.Infof("Get allocates get iter: %+v", iter)
+
 		for {
 			reservedIP, gw = iter.Next()
 			if reservedIP == nil {
 				break
 			}
+			log.Infof("Get allocates current stage: %s fetch ip: %+v will to match", stage, reservedIP)
 
 			// NOTE: 判断当前获取到的ip, 是否匹配当前的分级发布阶段; 同时不在已分配的ip列表里
 			if iter.matchDeployStageIP(stage, reservedIP.IP) && !a.store.IsIPExist(reservedIP.IP) {
@@ -184,6 +192,7 @@ type RangeIter struct {
 // More specifically, a crash-looping container will not see the same IP until
 // the entire range has been run through.
 // We may wish to consider avoiding recently-released IPs in the future.
+// 获取该rangeID下的遍历的起始ip、索引id
 func (a *IPAllocator) GetIter() (*RangeIter, error) {
 	iter := RangeIter{
 		rangeset: a.rangeset,
@@ -200,6 +209,7 @@ func (a *IPAllocator) GetIter() (*RangeIter, error) {
 	} else if lastReservedIP != nil {
 		startFromLastReservedIP = a.rangeset.Contains(lastReservedIP)
 	}
+	log.Infof("Get allocates startFromLastReservedIP: %t", startFromLastReservedIP)
 
 	// Find the range in the set with this IP
 	if startFromLastReservedIP {
@@ -268,7 +278,6 @@ func (i *RangeIter) Next() (*net.IPNet, net.IP) {
 func (i *RangeIter) matchDeployStageIP(stage string, ip net.IP) bool {
 	r := (*i.rangeset)[i.rangeIdx]
 	sandboxList := r.Sandbox
-	log.Infof("Current deploy stage: %s fetch ip: %s will to match", stage, ip)
 	if stage == "sandbox" {
 		if i.in(ip, sandboxList) {
 			return true

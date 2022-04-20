@@ -32,12 +32,12 @@ import (
 )
 
 func ExecCheck(client *clientv3.Client, conf *config.NetConf, args *skel.CmdArgs) error {
-	log.Info("IPAM Cmd check start check config.")
+	log.Info("IPAM check start check config.")
 
 	envArgs := args.Args
 	service, podname := util.GetCurrentServiceAndPod(envArgs)
 	if service == "" {
-		return fmt.Errorf("IPAM Cmd check get service from args: %s failed", envArgs)
+		return fmt.Errorf("IPAM check get service from args: %s failed", envArgs)
 	}
 
 	// Look to see if there is at least one IP address allocated to the container
@@ -56,22 +56,22 @@ func ExecCheck(client *clientv3.Client, conf *config.NetConf, args *skel.CmdArgs
 }
 
 func ExecAdd(client *clientv3.Client, conf *config.NetConf, args *skel.CmdArgs) (types.Result, error) {
-	log.Info("IPAM Cmd add start assign ip.")
+	log.Info("IPAM add start allocate ip")
 
 	envArgs := args.Args
 	service, podname := util.GetCurrentServiceAndPod(envArgs)
 	if service == "" {
-		return nil, fmt.Errorf("IPAM Cmd add get service from args: %s failed", envArgs)
+		return nil, fmt.Errorf("IPAM add get service from args: %s failed", envArgs)
 	}
 
 	ipamConf, _, err := config.LoadIPAMConfig(conf, envArgs)
 	if err != nil {
 		return nil, err
 	}
+	log.Infof("IPAM add get ipam conf: %+v", ipamConf)
+	log.Infof("IPAM add is have dns resolve conf file, result: %s", ipamConf.ResolvConf)
 
 	result := &current.Result{}
-
-	log.Infof("Cmd add is have dns resolve conf file, result: %s", ipamConf.ResolvConf)
 
 	store, err := etcd.New(client, service, podname)
 	if err != nil {
@@ -90,22 +90,26 @@ func ExecAdd(client *clientv3.Client, conf *config.NetConf, args *skel.CmdArgs) 
 	for _, ip := range ipamConf.IPArgs {
 		requestedIPs[ip.String()] = ip
 	}
+	log.Infof("IPAM add get requestedIPs: %+v", requestedIPs)
 
 	for idx, rangeset := range ipamConf.Ranges {
-		allocator := allocator.NewIPAllocator(&rangeset, store, idx)
+		ipAllocator := allocator.NewIPAllocator(&rangeset, store, idx)
+		log.Infof("IPAM add handle idx: %d rangeset: %+v", idx, rangeset)
 
 		// Check to see if there are any custom IPs requested in this range.
 		var requestedIP net.IP
 		for k, ip := range requestedIPs {
+			// 如果ip在对应的subnet内
 			if rangeset.Contains(ip) {
 				requestedIP = ip
 				delete(requestedIPs, k)
 				break
 			}
 		}
+		log.Infof("IPAM add get requestedIP: %v", requestedIP)
 
 		// 获取发布阶段
-		ipConf, err := allocator.Get(args.ContainerID, args.IfName, envArgs, requestedIP)
+		ipConf, err := ipAllocator.Get(args.ContainerID, args.IfName, envArgs, requestedIP)
 		if err != nil {
 			// Deallocate all already allocated IPs
 			for _, alloc := range allocs {
@@ -114,7 +118,7 @@ func ExecAdd(client *clientv3.Client, conf *config.NetConf, args *skel.CmdArgs) 
 			return nil, fmt.Errorf("failed to allocate for range %d: %v", idx, err)
 		}
 
-		allocs = append(allocs, allocator)
+		allocs = append(allocs, ipAllocator)
 
 		result.IPs = append(result.IPs, ipConf)
 	}
@@ -137,7 +141,7 @@ func ExecAdd(client *clientv3.Client, conf *config.NetConf, args *skel.CmdArgs) 
 }
 
 func ExecDel(client *clientv3.Client, conf *config.NetConf, args *skel.CmdArgs) error {
-	log.Info("Cmd del start delete ip.")
+	log.Info("IPAM del start delete ip.")
 
 	envArgs := args.Args
 	service, podname := util.GetCurrentServiceAndPod(envArgs)
@@ -160,9 +164,7 @@ func ExecDel(client *clientv3.Client, conf *config.NetConf, args *skel.CmdArgs) 
 	var errors []string
 	for idx, rangeset := range ipamConf.Ranges {
 		ipAllocator := allocator.NewIPAllocator(&rangeset, store, idx)
-
-		err := ipAllocator.Release(args.ContainerID, args.IfName)
-		if err != nil {
+		if err := ipAllocator.Release(args.ContainerID, args.IfName); err != nil {
 			errors = append(errors, err.Error())
 		}
 	}
@@ -170,6 +172,6 @@ func ExecDel(client *clientv3.Client, conf *config.NetConf, args *skel.CmdArgs) 
 	if errors != nil {
 		return fmt.Errorf(strings.Join(errors, ";"))
 	}
-	log.Infof("Cmd del release container: %s success.", args.ContainerID)
+	log.Infof("IPAM del release container: %s success.", args.ContainerID)
 	return nil
 }
